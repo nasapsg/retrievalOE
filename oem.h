@@ -1,6 +1,5 @@
 // ----------------------------------------------------------------------------
-// Optimal estimation module (OEM) - Header
-// Liuzzi and Villanueva - NASA/GSFC - Sep/2018
+// PSG Optimal estimation module (OEM) - Header
 // ----------------------------------------------------------------------------
 #define TINY 1.0e-20
 

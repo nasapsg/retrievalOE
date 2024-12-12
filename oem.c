@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// PSG optimal estimation module (OEM) - Liuzzi and Villanueva
+// PSG Optimal Estimation Module (OEM) - Liuzzi and Villanueva
 // Latest updates Villanueva, NASA/GSFC, December 2024
 // ----------------------------------------------------------------------------
 #include <string.h>

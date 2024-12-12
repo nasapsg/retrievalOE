@@ -2,8 +2,6 @@
 // Program to test the optimal estimation module (oemfit)
 // The main program implements also the loop to compute
 // the optimal estimation solution.
-// Liuzzi and Villanueva - NASA/GSFC - Sep/2018
-// To compile: gcc oemtest.c oem.c -o oemtest
 // ------------------------------------------------------------------------
 #include <string.h>
 #include <stdlib.h>
