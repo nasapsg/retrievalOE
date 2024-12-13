@@ -1,5 +1,5 @@
 // ----------------------------------------------------------------------------
-// PSG Optimal Estimation Module (OEM) - Liuzzi and Villanueva
+// PSG optimal estimation module (OEM) - Liuzzi and Villanueva
 // Latest updates Villanueva, NASA/GSFC, December 2024
 // ----------------------------------------------------------------------------
 #include <string.h>
@@ -7,11 +7,6 @@
 #include <stdio.h>
 #include <math.h>
 #include "oem.h"
-
-// Operational global arrays
-double *oem_p, *oem_b, *oem_r, *oem_vv, **oem_a, gscale; long *oem_indx;
-double **oem_sai, **oem_sei, **oem_diff, **oem_diffT, **oem_npt2, **oem_npa2, **oem_npa2, **oem_onem, **oem_pdff, **oem_pdffT;
-double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_s, **oem_par;
 
 // Main program that performs the fit
 void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, struct oem_result *results, struct oem_config config)
@@ -105,8 +100,8 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
     }
 
     // Perform a Levenberg-Marquard exploratory search of the solution near the current state
-    lambda = 0.0; gscale = 1.0; dcost = 1;
-    while (gscale<=100.0 && dcost>0) {
+    lambda = 0.0; oem_gscale = 1.0; dcost = 1;
+    while (oem_gscale<=100.0 && dcost>0) {
       err = oem_inv(data, results);
       if (err!=0) { results->status =-2; break; }         // Check for error in the matrix inversion process
       if (config.mode==1) { results->status = 1; break; } // Only computing Jacobians
@@ -135,7 +130,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
         break; 
       } else if (dcost>0 && lambda>100.0) { // Try increasing the tug to the a-priori and try again
         lambda = 0.0;
-        gscale *= 10.0;
+        oem_gscale *= 10.0;
       }
     }
 
@@ -197,7 +192,7 @@ int oem_inv(struct oem_data *data, struct oem_result *results)
   mmult(oem_kT_sei_k, oem_kT_sei, results->k, npar, npts, npar);
 
   // Calculate S_a^-1 + KT*Se^-1*K [npar x npar]
-  for (i=0;i<npar;i++) for (j=0;j<npar;j++) oem_si[i][j] = gscale*oem_sai[i][j] + oem_kT_sei_k[i][j];
+  for (i=0;i<npar;i++) for (j=0;j<npar;j++) oem_si[i][j] = oem_gscale*oem_sai[i][j] + oem_kT_sei_k[i][j];
 
   // Calculate the covariance matrix (S_a^-1 + KT*Se^-1*K)^-1 [npar x npar]
   err = minverse(oem_s, oem_si, npar, 1);

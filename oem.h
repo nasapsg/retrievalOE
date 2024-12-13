@@ -1,5 +1,6 @@
 // ----------------------------------------------------------------------------
-// PSG Optimal estimation module (OEM) - Header
+// Optimal estimation module (OEM) - Header
+// Liuzzi and Villanueva - NASA/GSFC - Sep/2018
 // ----------------------------------------------------------------------------
 #define TINY 1.0e-20
 
@@ -70,3 +71,8 @@ void mtranspose(double **kn, double **knt, long nx, long ny);
 void mmult(double **a, double **b, double **c, long nx, long ny, long nz);
 void madd(double **a, double **b, double **c, long nx, long ny, int flag);
 int minverse(double **a_inv, double **a, long n, int mode); 
+
+// Operational global arrays
+double *oem_p, *oem_b, *oem_r, *oem_vv, **oem_a, oem_gscale; long *oem_indx;
+double **oem_sai, **oem_sei, **oem_diff, **oem_diffT, **oem_npt2, **oem_npa2, **oem_npa2, **oem_onem, **oem_pdff, **oem_pdffT;
+double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_s, **oem_par;
