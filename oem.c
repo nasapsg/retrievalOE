@@ -21,9 +21,9 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   pd       = malloc(npar*sizeof(double));   // Temporary parameter for the derivative
   oem_indx = malloc(npar*sizeof(long));     // Index of LU decomposition (used by LU inverse)
   oem_p    = malloc(npar*sizeof(double));   // p vector used by matrix inversion
-  oem_b    = malloc(npar*sizeof(double));   // b verctor used by matrix inversion
-  oem_r    = malloc(npar*sizeof(double));   // r verctor used by matrix inversion
-  oem_vv   = malloc(npar*sizeof(double));   // vv verctor used by LU matrix inversion
+  oem_b    = malloc(npar*sizeof(double));   // b vector used by matrix inversion
+  oem_r    = malloc(npar*sizeof(double));   // r vector used by matrix inversion
+  oem_vv   = malloc(npar*sizeof(double));   // vv vector used by LU matrix inversion
   oem_a    = mdim(npar, npar, 0);           // Temporary copy of the matrix to be inverted
   oem_diff = mdim(npts, 1, 0);              // Vector containing the model difference
   oem_diffT= mdim(1, npts, 0);              // Transpose of the model difference
