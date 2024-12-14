@@ -96,7 +96,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
       if ((pd[i]+pars[i].step) > pars[i].maxval) delta = -pars[i].step; else delta = pars[i].step;
       pd[i] += pars[i].step;
       forward(pd, data->x, fper, npts, 1); results->nfev++;
-      for (l=0;l<npts;l++) results->k[l][i] = (fper[l] - results->fit[l])/delta + TINY*data->e[l];
+      for (l=0;l<npts;l++) results->k[l][i] = (fper[l] - results->fit[l] + TINY*data->e[l])/delta;
     }
 
     // Perform a Levenberg-Marquard exploratory search of the solution near the current state
@@ -106,7 +106,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
       if (err!=0) { results->status =-2; break; }         // Check for error in the matrix inversion process
       if (config.mode==1) { results->status = 1; break; } // Only computing Jacobians
 
-      // Advance solution and explore braking the search
+      // Advance solution and explore braking the jumps
       while (lambda<=100.0 && dcost>0) {
         results->npegged=0;
         for (l=0;l<npar; l++) {
@@ -125,7 +125,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
         else if (dcost>0 && lambda>0.0) lambda *= 10.0;
       }
 
-      // Status of convergence and explore increasing the weight of the prior or even resetting to the current state
+      // Status of convergence and explore increasing the weight of the prior
       if ((fabs(dcost) < config.xtol) && lambda==0.0) {  // Solution converged
         break; 
       } else if (dcost>0 && lambda>100.0) { // Try increasing the tug to the a-priori and try again
@@ -146,7 +146,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
       results->status = 2; // Reached the maximum number of iterations     
     } else if (dcost>0 && cost<cost0) {
       for (l=0;l<npar; l++) results->pfit[l] = pd[l];
-      results->status = 3; // Divergence of the siluation but reached a better state
+      results->status = 3; // Divergence of the retrieval but reached a better state
     } else if (dcost>0) {
       results->status = -1; // The retrieval diverged and could not fit the data
     } else if (results->status==0) {
@@ -158,7 +158,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   // Generate the latest model
   if (config.mode==0 && results->status>0 && npar>0) {
     forward(results->pfit, data->x, results->fit, npts, 1); results->nfev++;  // Generate final model
-    cost = oem_cost(data, results, results->fit, config.fpcost);                            // Compute cost function
+    cost = oem_cost(data, results, results->fit, config.fpcost);              // Compute cost function
   }
 
   // Calculate resulting variables
@@ -273,27 +273,13 @@ void mtranspose(double **knt, double **kn, long nx, long ny)
 // Matrix multiplication C[nx:nz] = A[nx:ny] x B[ny:nz]
 void mmult(double **c, double **a, double **b, long nx, long ny, long nz)
 {
-  long x,y,z; double sum=0.0; int mode=0;
-
-  // Search for diagonality (simple test) to improve performance
-  if (nx==ny && ny>1) if (a[0][1]==0.0) mode=1;
-  if (ny==nz && ny>1) if (b[0][1]==0.0) { if (mode==1) mode=3; else mode=2; }
-
-  // Perform the multiplication
-  if (mode==0) {           // Standard-mode
-    for (x=0;x<nx;x++) {
-      for (z=0;z<nz;z++) {
-        for (y=0;y<ny;y++) sum+= a[x][y]*b[y][z];
-        c[x][z] = sum;
-        sum = 0.0;
-      }
+  long x,y,z; double sum=0.0;
+  for (x=0;x<nx;x++) {
+    for (z=0;z<nz;z++) {
+      for (y=0;y<ny;y++) sum+= a[x][y]*b[y][z];
+      c[x][z] = sum;
+      sum = 0.0;
     }
-  } else if (mode==1) {   // A is diagonal+quadratic
-    for (x=0;x<nx;x++) for (z=0;z<nz;z++) c[x][z] = a[x][x]*b[x][z];
-  } else if (mode==2) {   // B is diagonal+quadratic
-    for (x=0;x<nx;x++) for (z=0;z<nz;z++) c[x][z] = a[x][z]*b[z][z];
-  } else {                // A and B are diagonal and quadratic
-    for (x=0;x<nx;x++) c[x][x] = a[x][x]*b[x][x];
   }
 }
 
