@@ -398,7 +398,6 @@ int minverse(double **a_inv, double **a, long n, int mode)
 {
   long i, j, err;
   if (n<=1) mode=2;
-  else if (a[0][1]==0.0 && a[1][0]==0.0) mode=2; // Simple test for diagonal matrix
 
   // Inversion via LU decomposition
   if (mode==0) {
