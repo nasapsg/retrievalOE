@@ -8,6 +8,11 @@
 #include <math.h>
 #include "oem.h"
 
+// Operational global arrays
+double *oem_p, *oem_b, *oem_r, *oem_vv, **oem_a, oem_gscale; long *oem_indx;
+double **oem_sai, **oem_sei, **oem_diff, **oem_diffT, **oem_npt2, **oem_npa2, **oem_npa2, **oem_onem, **oem_pdff, **oem_pdffT;
+double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_s, **oem_par;
+
 // Main program that performs the fit
 void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, struct oem_result *results, struct oem_config config)
 {
@@ -83,7 +88,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   results->niter=0; results->nfev=0; results->status=0; results->dof=0.0; results->chisq=0.0;
 
   // Obtain an apriori model
-  forward(results->pfit, data->x, results->fit, npts, 1); results->nfev++;
+  forward(results->pfit, data->x, results->fit, npts); results->nfev++;
 
   // Compute initial cost function
   cost0 = oem_cost(data, results, results->pfit, config.fpcost); lcost = cost0;
@@ -95,7 +100,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
       for (j=0;j<npar;j++) pd[j] = results->pfit[j];
       if ((pd[i]+pars[i].step) > pars[i].maxval) delta = -pars[i].step; else delta = pars[i].step;
       pd[i] += pars[i].step;
-      forward(pd, data->x, fper, npts, 1); results->nfev++;
+      forward(pd, data->x, fper, npts); results->nfev++;
       for (l=0;l<npts;l++) results->k[l][i] = (fper[l] - results->fit[l] + TINY*data->e[l])/delta;
     }
 
@@ -115,7 +120,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
           else if (pd[l]>pars[l].maxval) { pd[l] = pars[l].maxval; results->npegged++; pars[l].status=1; }
           else { pars[l].status=0; }
         }
-        forward(pd, data->x, results->fit, npts, 1); results->nfev++;  // Re-compute solution with the new parameters
+        forward(pd, data->x, results->fit, npts); results->nfev++;  // Re-compute solution with the new parameters
         cost = oem_cost(data, results, pd, config.fpcost);             // Compute cost function
         dcost = (cost-lcost)/lcost;                                    // Relative change of the cost function
 
@@ -157,7 +162,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
 
   // Generate the latest model
   if (config.mode==0 && results->status>0 && npar>0) {
-    forward(results->pfit, data->x, results->fit, npts, 1); results->nfev++;  // Generate final model
+    forward(results->pfit, data->x, results->fit, npts); results->nfev++;     // Generate final model
     cost = oem_cost(data, results, results->fit, config.fpcost);              // Compute cost function
   }
 

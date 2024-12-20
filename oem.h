@@ -58,8 +58,7 @@ typedef void (*oem_func)(
   double *p,           // Parameters for the forward model
   double *x,           // Ordinate vector
   double *y,           // Resulting function
-  long npts,           // Number of points
-  int fitbase);        // Flag indicating if base/gain should be fitted
+  long npts);          // Number of points
 
 // Prototypes
 void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, struct oem_result *results, struct oem_config config);
@@ -71,8 +70,3 @@ void mtranspose(double **kn, double **knt, long nx, long ny);
 void mmult(double **a, double **b, double **c, long nx, long ny, long nz);
 void madd(double **a, double **b, double **c, long nx, long ny, int flag);
 int minverse(double **a_inv, double **a, long n, int mode); 
-
-// Operational global arrays
-double *oem_p, *oem_b, *oem_r, *oem_vv, **oem_a, oem_gscale; long *oem_indx;
-double **oem_sai, **oem_sei, **oem_diff, **oem_diffT, **oem_npt2, **oem_npa2, **oem_npa2, **oem_onem, **oem_pdff, **oem_pdffT;
-double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_s, **oem_par;

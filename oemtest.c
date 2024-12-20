@@ -10,7 +10,7 @@
 #include "oem.h" 
 
 // Forward test model
-void forward(double *p, double *x, double *y, long npts, int fitbase) 
+void forward(double *p, double *x, double *y, long npts) 
 {
   long i; double n0=pow(10.0,p[0]), ni;
   for (i=0;i<npts;i++) {
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     ui = -4.0 + (2.0/5e1)*i;
     data.x[i] = pow(10.0, ui);
   }
-  forward(par0, data.x, data.y, npts, 0);
+  forward(par0, data.x, data.y, npts);
   for (i=0;i<npts;i++) { 
     data.e[i]  = 0.1;
     data.y[i] += 2.0*((1.0*rand()/RAND_MAX)-0.5)*data.e[i];
