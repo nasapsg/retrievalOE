@@ -99,7 +99,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
     for (i=0;i<npar;i++) {
       for (j=0;j<npar;j++) pd[j] = results->pfit[j];
       if ((pd[i]+pars[i].step) > pars[i].maxval) delta = -pars[i].step; else delta = pars[i].step;
-      pd[i] += pars[i].step;
+      pd[i] += delta;
       forward(pd, data->x, fper, npts); results->nfev++;
       for (l=0;l<npts;l++) results->k[l][i] = (fper[l] - results->fit[l] + TINY*data->e[l])/delta;
     }
