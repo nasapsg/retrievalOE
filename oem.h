@@ -50,6 +50,7 @@ struct oem_result {
   double *efit;        // Parameter uncertainties (1-sigma), 1D npar vector (npar)
   double *fit;         // Optimum model (npts)
   double **ak;         // Averaging kernels (npar x npar)
+  double **s;          // Covariance matrix (npar x npar)
   double **k;          // Jacobians (npts x npar)
 };
 

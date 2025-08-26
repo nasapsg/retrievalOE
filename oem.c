@@ -11,7 +11,7 @@
 // Operational global arrays
 double *oem_p, *oem_b, *oem_r, *oem_vv, **oem_a, oem_gscale; long *oem_indx;
 double **oem_sai, **oem_sei, **oem_diff, **oem_diffT, **oem_npt2, **oem_npa2, **oem_npa2, **oem_onem, **oem_pdff, **oem_pdffT;
-double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_s, **oem_par;
+double **oem_kT, **oem_kT_sei, **oem_kT_sei_k, **oem_si, **oem_par;
 
 // Main program that performs the fit
 void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, struct oem_result *results, struct oem_config config)
@@ -41,7 +41,6 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   oem_kT_sei = mdim(npar, npts, 0);         // Operational matrix
   oem_kT_sei_k = mdim(npar, npar, 0);       // Operational matrix
   oem_si   = mdim(npar, npar, 0);           // Inverse of the covariance matrix
-  oem_s    = mdim(npar, npar, 0);           // Covariance matrix
   oem_par  = mdim(npar, 1, 0);              // Estimated new parameter vector
 
   // Allocate resources in the results structure (if necessary)
@@ -50,6 +49,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   if (results->efit==NULL)  results->efit = malloc(npar*sizeof(double));
   if (results->fit==NULL)   results->fit  = malloc(npts*sizeof(double));
   if (results->ak==NULL)    results->ak   = mdim(npar, npar, 0);
+  if (results->s==NULL)     results->s    = mdim(npar, npar, 0);
   if (results->k==NULL)     results->k    = mdim(npts, npar, 0);
 
   // Prepare the parameters and their co-variances (if not provided)
@@ -120,7 +120,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
           else if (pd[l]>pars[l].maxval) { pd[l] = pars[l].maxval; results->npegged++; pars[l].status=1; }
           else { pars[l].status=0; }
         }
-        forward(pd, data->x, results->fit, npts); results->nfev++;  // Re-compute solution with the new parameters
+        forward(pd, data->x, results->fit, npts); results->nfev++;     // Re-compute solution with the new parameters
         cost = oem_cost(data, results, pd, config.fpcost);             // Compute cost function
         dcost = (cost-lcost)/lcost;                                    // Relative change of the cost function
 
@@ -167,9 +167,9 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   }
 
   // Calculate resulting variables
-  mmult(results->ak, oem_s, oem_kT_sei_k, npar, npar, npar);                 // Calculate averaging kernels S KT*Se^-1*K
+  mmult(results->ak, results->s, oem_kT_sei_k, npar, npar, npar);            // Calculate averaging kernels S KT*Se^-1*K
   results->dof=0.0; for (j=0;j<npar;j++) results->dof += results->ak[j][j];  // DOF is sum of diagonal terms of AK
-  for (i=0;i<npar;i++) results->efit[i] = sqrt(oem_s[i][i])/(results->ak[i][i] + TINY);
+  for (i=0;i<npar;i++) results->efit[i] = sqrt(results->s[i][i])/(results->ak[i][i] + TINY);
 
   // Release the memory
   free(fper); free(pd);
@@ -177,7 +177,7 @@ void oem_fit(oem_func forward, struct oem_par *pars, struct oem_data *data, stru
   mfree(oem_a, npar); mfree(oem_diff, npts); mfree(oem_diffT, 1); mfree(oem_npt2, npts);
   mfree(oem_npa2, npar); mfree(oem_onem, 1); mfree(oem_pdff, npar); mfree(oem_pdffT, 1);
   mfree(oem_kT, npar); mfree(oem_kT_sei, npar); mfree(oem_kT_sei_k, npar);
-  mfree(oem_si, npar); mfree(oem_s, npar); mfree(oem_par, npar);
+  mfree(oem_si, npar); mfree(oem_par, npar);
 }
 
 // Inversion function
@@ -200,7 +200,7 @@ int oem_inv(struct oem_data *data, struct oem_result *results)
   for (i=0;i<npar;i++) for (j=0;j<npar;j++) oem_si[i][j] = oem_gscale*oem_sai[i][j] + oem_kT_sei_k[i][j];
 
   // Calculate the covariance matrix (S_a^-1 + KT*Se^-1*K)^-1 [npar x npar]
-  err = minverse(oem_s, oem_si, npar, 1);
+  err = minverse(results->s, oem_si, npar, 1);
   if (err!=0) return err;
 
   // Calculate linearized model variation K(x-xa) [npts x 1]
@@ -214,7 +214,7 @@ int oem_inv(struct oem_data *data, struct oem_result *results)
   mmult(oem_pdff, oem_kT_sei, oem_diff, npar, npts, 1);
 
   // Calculate xi+1 = xi + (S_a^-1 + KT*Se^-1*K)^-1 KT*Se^-1(y-f + K(x-xa)) [npar x 1]
-  mmult(oem_par, oem_s, oem_pdff, npar, npar, 1);
+  mmult(oem_par, results->s, oem_pdff, npar, npar, 1);
   for (l=0;l<npar; l++) oem_par[l][0] += results->prior[l];
   return 0;
 }
